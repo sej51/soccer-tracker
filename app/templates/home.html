@@ -2,11 +2,23 @@
 
 {% block content %}
 <div class="text-center">
-    <h1>Available Leagues</h1>
-    <ul class="list-group w-50 mx-auto my-4">
-        {% for league in leagues %}
-        <li class="list-group-item">{{ league.name }}</li>
-        {% endfor %}
-    </ul>
+    <h1>Select Your Favorite Team</h1>
+
+    <form action="/team" method="post" class="my-4">
+        <div class="mb-3">
+            <label for="team" class="form-label">Select Team</label>
+            <select id="teamDropdown" name="team" class="form-select w-50 mx-auto">
+                {% for league, teams in teams_by_league.items() %}
+                <optgroup label="{{ league }}">
+                    {% for team in teams %}
+                    <option value="{{ team.name }}">{{ team.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Submit</button>
+    </form>
 </div>
 {% endblock %}
