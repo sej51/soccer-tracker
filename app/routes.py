@@ -11,3 +11,7 @@ def home():
         {"code": "SA", "name": "Serie A"},
     ]
     return render_template('home.html', leagues=leagues)
+
+@main.route('/about')
+def about():
+    return render_template('about.html')

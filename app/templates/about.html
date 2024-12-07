@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">About Soccer Tracker</h1>
+    <p class="lead text-center">
+        Soccer Tracker is your go-to application for staying updated with soccer fixtures, standings, and team statistics from top leagues worldwide.
+    </p>
+
+    <div class="mt-5">
+        <h2 class="text-center">Our Team</h2>
+        <div class="row text-center mt-4">
+            <!-- Team Member 1 -->
+            <div class="col-md-4">
+                <div class="card border-0">
+                    <img src="{{ url_for('static', filename='images/member1.jpg') }}" class="card-img-top rounded-circle mx-auto d-block" alt="Team Member 1" style="width: 150px; height: 150px;">
+                    <div class="card-body">
+                        <h5 class="card-title">Sebastian Jolly</h5>
+                        <p class="card-text">Frontend Wizard</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Team Member 2 -->
+            <div class="col-md-4">
+                <div class="card border-0">
+                    <img src="{{ url_for('static', filename='images/member2.jpg') }}" class="card-img-top rounded-circle mx-auto d-block" alt="Team Member 2" style="width: 150px; height: 150px;">
+                    <div class="card-body">
+                        <h5 class="card-title">Mariano Ortiz</h5>
+                        <p class="card-text">Backend Specialist</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Team Member 3 -->
+            <div class="col-md-4">
+                <div class="card border-0">
+                    <img src="{{ url_for('static', filename='images/member3.jpg') }}" class="card-img-top rounded-circle mx-auto d-block" alt="Team Member 3" style="width: 150px; height: 150px;">
+                    <div class="card-body">
+                        <h5 class="card-title">James Shi</h5>
+                        <p class="card-text">Full Stack God</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
