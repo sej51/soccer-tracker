@@ -7,6 +7,32 @@
         <img src="{{ team['crest'] }}" alt="{{ team['name'] }} Logo" width="150">
     </div>
 
+    <div class="mb-4">
+        <h2>Standings</h2>
+        {% if standings %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Position</th>
+                    <th>Team</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for standing in standings %}
+                <tr class="{% if standing.team.id == selected_team_id %}table-success{% endif %}">
+                    <td>{{ standing.position }}</td>
+                    <td>{{ standing.team.name }}</td>
+                    <td>{{ standing.points }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>Standings data is not available.</p>
+        {% endif %}
+    </div>
+
     <div>
         <h2>Upcoming Games</h2>
         {% if upcoming_games %}

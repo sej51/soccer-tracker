@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="text-center">
+<div class="container text-center">
     <h1>Select Your Favorite Team</h1>
 
-    <form action="/team" method="post" class="my-4">
+    <form action="/" method="post">
         <div class="mb-3">
-            <label for="team" class="form-label">Select Team</label>
-            <select id="teamDropdown" name="team" class="form-select w-50 mx-auto">
-                {% for league, teams in teams_by_league.items() %}
-                <optgroup label="{{ league }}">
-                    {% for team in teams %}
-                    <option value="{{ team.name }}">{{ team.name }}</option>
-                    {% endfor %}
-                </optgroup>
+            <label for="league" class="form-label">Select League</label>
+            <select id="leagueDropdown" name="league" class="form-select w-50 mx-auto">
+                {% for league in leagues %}
+                <option value="{{ league['code'] }}" {% if league['code'] == selected_league %}selected{% endif %}>
+                    {{ league['name'] }}
+                </option>
                 {% endfor %}
             </select>
         </div>
-
-        <button type="submit" class="btn btn-primary mt-3">Submit</button>
+        <button type="submit" class="btn btn-primary">Select League</button>
     </form>
+
+    {% if selected_league %}
+    <form action="/team" method="post">
+        <input type="hidden" name="league" value="{{ selected_league }}">
+        <div class="mb-3">
+            <label for="team" class="form-label">Select Team</label>
+            <select id="teamDropdown" name="team" class="form-select w-50 mx-auto">
+                {% for team in teams %}
+                <option value="{{ team['name'] }}">{{ team['name'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Select Team</button>
+    </form>
+    {% endif %}
 </div>
 {% endblock %}
