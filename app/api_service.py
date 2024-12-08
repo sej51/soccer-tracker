@@ -42,3 +42,21 @@ def get_teams_by_league(league_code):
         return []
 
     return response.json().get("teams", [])
+
+def get_team_info(team_name):
+    """Fetch team information by name within the Premier League."""
+    headers = {"X-Auth-Token": API_TOKEN}
+    response = requests.get(f"{API_BASE_URL}/competitions/PL/teams", headers=headers)
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e}")
+        print(f"Response content: {response.content}")
+        return None
+
+    teams = response.json().get("teams", [])
+    for team in teams:
+        if team_name.lower() in team["name"].lower():
+            return team
+    return None

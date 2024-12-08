@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from .api_service import get_all_leagues, get_teams_by_league
+from .api_service import get_all_leagues, get_teams_by_league, get_team_info
 
 main = Blueprint('main', __name__)
 @main.route('/')
@@ -18,4 +18,12 @@ def about():
 @main.route('/team', methods=['POST'])
 def team():
     team_name = request.form['team']
-    return render_template('team.html', team_name=team_name)
+    team_info = get_team_info(team_name)
+
+    if not team_info:
+        return f"Sorry, no data found for team: {team_name}", 404
+
+    return render_template(
+        'team.html',
+        team=team_info,
+    )

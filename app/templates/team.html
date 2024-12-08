@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="text-center mb-4">
+        <h1>{{ team['name'] }}</h1>
+        <img src="{{ team['crest'] }}" alt="{{ team['name'] }} Logo" width="150">
+    </div>
+</div>
+{% endblock %}
