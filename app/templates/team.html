@@ -6,5 +6,31 @@
         <h1>{{ team['name'] }}</h1>
         <img src="{{ team['crest'] }}" alt="{{ team['name'] }} Logo" width="150">
     </div>
+
+    <div>
+        <h2>Upcoming Games</h2>
+        {% if upcoming_games %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date & Time (Local)</th>
+                    <th>Home Team</th>
+                    <th>Away Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in upcoming_games %}
+                <tr>
+                    <td>{{ game.formattedDate }}</td>
+                    <td>{{ game.homeTeam.name }}</td>
+                    <td>{{ game.awayTeam.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No upcoming games found.</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

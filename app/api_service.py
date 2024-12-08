@@ -60,3 +60,23 @@ def get_team_info(team_name):
         if team_name.lower() in team["name"].lower():
             return team
     return None
+
+def get_team_fixtures(team_id, date_from=None, date_to=None):
+    """Fetch fixtures for a specific team within a date range."""
+    headers = {"X-Auth-Token": API_TOKEN}
+    params = {}
+    if date_from:
+        params["dateFrom"] = date_from
+    if date_to:
+        params["dateTo"] = date_to
+
+    response = requests.get(f"{API_BASE_URL}/teams/{team_id}/matches", headers=headers, params=params)
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e}")
+        print(f"Response content: {response.content}")
+        return None
+
+    return response.json()  # Return fixtures data
