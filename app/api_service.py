@@ -99,3 +99,19 @@ def get_standings(competition="PL"):
         return {"standings": []}
 
     return standings_data
+
+def get_fixtures(competition, date_from=None, date_to=None):
+    """Fetch fixtures for the specified competition and date range."""
+    headers = {"X-Auth-Token": API_TOKEN}
+    params = {"dateFrom": date_from, "dateTo": date_to}
+
+    response = requests.get(f"{API_BASE_URL}/competitions/{competition}/matches", headers=headers, params=params)
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e}")
+        print(f"Response content: {response.content}")
+        return None
+
+    return response.json()
