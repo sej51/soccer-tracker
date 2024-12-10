@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo 
 
 from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings, get_fixtures
-from .helper import convert_to_local_time
+from .helper import convert_to_local_time, format_game_dates
 
 main = Blueprint('main', __name__)
 @main.route('/', methods=['GET', 'POST'])
@@ -81,5 +81,7 @@ def fixtures():
     fixtures_by_league = {}
     for league in leagues:
         fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
+        if fixtures:
+            fixtures_by_league[league["name"]] = format_game_dates(fixtures)
 
     return render_template('fixtures.html', fixtures_by_league=fixtures_by_league)
