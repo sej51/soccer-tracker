@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, request
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo 
 
-from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings
-from .helper import convert_to_local_time
+from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings, get_fixtures
+from .helper import convert_to_local_time, format_game_dates
 
 main = Blueprint('main', __name__)
 @main.route('/', methods=['GET', 'POST'])
@@ -61,3 +61,27 @@ def team():
         upcoming_games=upcoming_games,
         selected_team_id=team_id
     )
+
+@main.route('/fixtures')
+def fixtures():
+    today = datetime.now()
+    next_week = today + timedelta(weeks=1)
+
+    date_from = today.strftime('%Y-%m-%d')
+    date_to = next_week.strftime('%Y-%m-%d')
+
+    leagues = [
+        {"code": "PL", "name": "Premier League"},
+        {"code": "BL1", "name": "Bundesliga"},
+        {"code": "FL1", "name": "Ligue 1"},
+        {"code": "PD", "name": "La Liga"},
+        {"code": "SA", "name": "Serie A"}
+    ]
+
+    fixtures_by_league = {}
+    for league in leagues:
+        fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
+        if fixtures:
+            fixtures_by_league[league["name"]] = format_game_dates(fixtures)
+
+    return render_template('fixtures.html', fixtures_by_league=fixtures_by_league)

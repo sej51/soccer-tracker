@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">Upcoming Games</h1>
+
+    {% if fixtures_by_league %}
+    {% for league_name, fixtures in fixtures_by_league.items() %}
+    <div class="mb-4">
+        <h2>{{ league_name }}</h2>
+        {% if fixtures %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Date & Time (Local)</th>
+                    <th>Home Team</th>
+                    <th>Away Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in fixtures %}
+                <tr>
+                    <td>{{ match.formattedDate }}</td>
+                    <td>{{ match.homeTeam.name }}</td>
+                    <td>{{ match.awayTeam.name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No fixtures available for {{ league_name }}.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No fixtures available for the selected time frame.</p>
+    {% endif %}
+</div>
+{% endblock %}
