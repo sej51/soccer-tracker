@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, flash, redirect, url_for
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo 
 
@@ -31,11 +31,13 @@ def team():
     team_name = request.form.get('team')
 
     if not league_code or not team_name:
-        return "League or team not selected. Please go back and try again.", 400
+        flash("Please select a league and a team.", "danger")
+        return redirect(url_for("main.home"))
 
     team_info = get_team_info(team_name, league_code)
     if not team_info:
-        return f"Sorry, no data found for team: {team_name}", 404
+        flash(f"No data found for the team '{team_name}'.", "warning")
+        return redirect(url_for("main.home"))
 
     today = datetime.now()
     next_month = today + timedelta(days=30)
@@ -45,10 +47,12 @@ def team():
         team_id, date_from=today.strftime('%Y-%m-%d'), date_to=next_month.strftime('%Y-%m-%d')
     )
 
-    def format_game_dates(games):
-        for game in games.get("matches", []):
-            game["formattedDate"] = convert_to_local_time(game["utcDate"])
-        return games.get("matches", [])
+    if not upcoming_games:
+        flash(f"No upcoming fixtures found for {team_name}.", "info")
+
+    standings = get_standings(league_code)
+    if not standings or not standings.get("standings", []):
+        flash(f"Standings data is unavailable for {league_code}.", "info")
 
     upcoming_games = format_game_dates(upcoming_games)
 
@@ -83,5 +87,10 @@ def fixtures():
         fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
         if fixtures:
             fixtures_by_league[league["name"]] = format_game_dates(fixtures)
+    
+    if not fixtures_by_league:
+        flash("No fixtures available for the upcoming week.", "info")
+        return redirect(url_for("main.home"))
+
 
     return render_template('fixtures.html', fixtures_by_league=fixtures_by_league)
