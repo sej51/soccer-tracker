@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
-from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings, get_fixtures
+from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings, get_fixtures, get_all_teams, send_email
 from .helper import convert_to_local_time, format_game_dates
 
 main = Blueprint('main', __name__)
@@ -31,13 +33,11 @@ def team():
     team_name = request.form.get('team')
 
     if not league_code or not team_name:
-        flash("Please select a league and a team.", "danger")
-        return redirect(url_for("main.home"))
+        return "League or team not selected. Please go back and try again.", 400
 
     team_info = get_team_info(team_name, league_code)
     if not team_info:
-        flash(f"No data found for the team '{team_name}'.", "warning")
-        return redirect(url_for("main.home"))
+        return f"Sorry, no data found for team: {team_name}", 404
 
     today = datetime.now()
     next_month = today + timedelta(days=30)
@@ -47,12 +47,10 @@ def team():
         team_id, date_from=today.strftime('%Y-%m-%d'), date_to=next_month.strftime('%Y-%m-%d')
     )
 
-    if not upcoming_games:
-        flash(f"No upcoming fixtures found for {team_name}.", "info")
-
-    standings = get_standings(league_code)
-    if not standings or not standings.get("standings", []):
-        flash(f"Standings data is unavailable for {league_code}.", "info")
+    def format_game_dates(games):
+        for game in games.get("matches", []):
+            game["formattedDate"] = convert_to_local_time(game["utcDate"])
+        return games.get("matches", [])
 
     upcoming_games = format_game_dates(upcoming_games)
 
@@ -87,10 +85,80 @@ def fixtures():
         fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
         if fixtures:
             fixtures_by_league[league["name"]] = format_game_dates(fixtures)
-    
-    if not fixtures_by_league:
-        flash("No fixtures available for the upcoming week.", "info")
-        return redirect(url_for("main.home"))
-
 
     return render_template('fixtures.html', fixtures_by_league=fixtures_by_league)
+
+@main.route('/api/teams/<league_code>')
+def get_teams_api(league_code):
+    teams = get_teams_by_league(league_code)
+    if not teams:
+        return {"teams": []}, 404
+    return {"teams": [{"name": team["name"]} for team in teams]}, 200
+
+@main.route('/email', methods=['GET', 'POST'])
+def email_report():
+    if request.method == 'POST':
+        league_code = request.form.get('league')
+        team_name = request.form.get('team')
+        email = request.form.get('email')
+
+        # Validate form inputs
+        if not league_code or not team_name or not email:
+            flash("Please provide all required information.", "danger")
+            return redirect(url_for('main.email_report'))
+
+        # Fetch team data
+        team_info = get_team_info(team_name, league_code)
+        if not team_info:
+            flash(f"Team {team_name} not found in {league_code}!", "danger")
+            return redirect(url_for('main.email_report'))
+
+        # Fetch additional data for the report
+        team_id = team_info["id"]
+        today = datetime.now()
+        next_month = today + timedelta(days=30)
+
+        upcoming_games = get_team_fixtures(
+            team_id, date_from=today.strftime('%Y-%m-%d'), date_to=next_month.strftime('%Y-%m-%d')
+        )
+        standings = get_standings(league_code)
+
+        # Format upcoming games
+        formatted_games = format_game_dates(upcoming_games)
+
+        # Generate email content
+        email_content = f"""
+        <h1>{team_info['name']}</h1>
+        <img src="{team_info['crest']}" alt="{team_info['name']} Logo" width="150">
+        <h2>Upcoming Games</h2>
+        <ul>
+        {"".join(f"<li>{game['formattedDate']}: {game['homeTeam']['name']} vs {game['awayTeam']['name']}</li>" for game in formatted_games)}
+        </ul>
+        <h2>Standings</h2>
+        <table border="1" cellpadding="5">
+            <tr>
+                <th>Position</th>
+                <th>Team</th>
+                <th>Points</th>
+            </tr>
+            {"".join(f"<tr><td>{standing['position']}</td><td>{standing['team']['name']}</td><td>{standing['points']}</td></tr>" for standing in standings.get('standings', [])[0].get('table', []))}
+        </table>
+        """
+
+        # Send the email
+        if send_email(email, f"Report for {team_name}", email_content):
+            flash(f"Email sent successfully to {email}!", "success")
+        else:
+            flash("Failed to send email. Please try again later.", "danger")
+
+        return redirect(url_for('main.home'))
+
+    # Fetch all teams for all leagues
+    leagues = get_all_leagues()
+    all_teams = []
+    for league in leagues:
+        league_teams = get_teams_by_league(league["code"])
+        for team in league_teams:
+            all_teams.append({"name": team["name"], "league": league["name"]})
+
+    return render_template("email.html", teams=all_teams, leagues=leagues)

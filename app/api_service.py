@@ -1,11 +1,14 @@
 import os
 import requests
 from dotenv import load_dotenv
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 load_dotenv()
 
 API_BASE_URL = "https://api.football-data.org/v4"
 API_TOKEN = os.getenv("API_TOKEN")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
 def get_all_leagues():
     """Fetch all supported leagues from the API."""
@@ -115,3 +118,34 @@ def get_fixtures(competition, date_from=None, date_to=None):
         return None
 
     return response.json()
+
+def get_all_teams(competition="PL"):
+    """Fetch all teams in the specified competition."""
+    headers = {"X-Auth-Token": API_TOKEN}
+    response = requests.get(f"{API_BASE_URL}/competitions/{competition}/teams", headers=headers)
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error: {e}")
+        print(f"Response content: {response.content}")
+        return None
+
+    return response.json().get("teams", [])
+
+def send_email(to_email, subject, content):
+    """Send an email using SendGrid."""
+    try:
+        message = Mail(
+            from_email="sjolly03@gmail.com",
+            to_emails=to_email,
+            subject=subject,
+            html_content=content
+    )
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        response = sg.send(message)
+        print(f"Email sent successfully! Status code: {response.status_code}")
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False

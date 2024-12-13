@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center my-4">Get Your Team Report via Email</h1>
+    <form method="post" action="/email" class="w-50 mx-auto">
+        <div class="mb-3">
+            <label for="league" class="form-label">Select League</label>
+            <select name="league" id="league" class="form-select" required onchange="populateTeams(this.value)">
+                <option value="">Select a league</option>
+                {% for league in leagues %}
+                <option value="{{ league.code }}">{{ league.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="team" class="form-label">Select Team</label>
+            <select name="team" id="team" class="form-select" required>
+                <option value="">Select a team</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Your Email Address</label>
+            <input type="email" name="email" id="email" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Report</button>
+    </form>
+</div>
+
+<script>
+    const teamsByLeague = {};
+
+    async function populateTeams(leagueCode) {
+        const teamDropdown = document.getElementById("team");
+        teamDropdown.innerHTML = "<option value=''>Select a team</option>";
+
+        if (leagueCode) {
+            if (!teamsByLeague[leagueCode]) {
+                const response = await fetch(`/api/teams/${leagueCode}`);
+                const data = await response.json();
+                teamsByLeague[leagueCode] = data.teams;
+            }
+
+            teamsByLeague[leagueCode].forEach(team => {
+                const option = document.createElement("option");
+                option.value = team.name;
+                option.textContent = team.name;
+                teamDropdown.appendChild(option);
+            });
+        }
+    }
+</script>
+{% endblock %}
