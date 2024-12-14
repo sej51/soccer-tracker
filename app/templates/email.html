@@ -30,25 +30,27 @@
 </div>
 
 <script>
-    const teamsByLeague = {};
-
     async function populateTeams(leagueCode) {
         const teamDropdown = document.getElementById("team");
         teamDropdown.innerHTML = "<option value=''>Select a team</option>";
 
         if (leagueCode) {
-            if (!teamsByLeague[leagueCode]) {
+            try {
                 const response = await fetch(`/api/teams/${leagueCode}`);
-                const data = await response.json();
-                teamsByLeague[leagueCode] = data.teams;
+                if (response.ok) {
+                    const data = await response.json();
+                    data.teams.forEach(team => {
+                        const option = document.createElement("option");
+                        option.value = team.name;
+                        option.textContent = team.name;
+                        teamDropdown.appendChild(option);
+                    });
+                } else {
+                    console.error(`Failed to fetch teams: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching teams: ${error}`);
             }
-
-            teamsByLeague[leagueCode].forEach(team => {
-                const option = document.createElement("option");
-                option.value = team.name;
-                option.textContent = team.name;
-                teamDropdown.appendChild(option);
-            });
         }
     }
 </script>

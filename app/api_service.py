@@ -1,5 +1,4 @@
 import requests
-from dotenv import load_dotenv
 
 from .config import API_BASE_URL, API_TOKEN
 
