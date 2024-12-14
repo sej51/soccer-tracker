@@ -1,5 +1,7 @@
 # soccer-tracker
 
+*Please keep in mind for testing we are using a free API and are only allowed a few requests per minute. The API takes a minute to reload.
+
 ## Setup
 
 Create a virtual environment (first time only):
@@ -30,7 +32,7 @@ Create a ".env" file and add contents like the following (using your own SendGri
 # this is the ".env" file:
 API_TOKEN="..."
 SENDGRID_API_KEY = "..."
-SENDGRID_SENDER_ADDRESS = "..."
+SECRET_KEY="..."
 ```
 
 
@@ -56,3 +58,13 @@ Run tests:
 ```sh
 pytest
 ```
+
+
+## Code Climate
+
+This project uses Code Climate for automated code quality analysis.
+
+Setting Up Code Climate:
+
+1. Sign up for [Code Climate](https://codeclimate.com/quality) if you haven’t already.
+2. Add the repository to your Code Climate dashboard.
