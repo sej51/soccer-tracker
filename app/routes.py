@@ -1,26 +1,22 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
-from .api_service import get_all_leagues, get_teams_by_league, get_team_info, get_team_fixtures, get_standings, get_fixtures, get_all_teams, send_email
-from .helper import convert_to_local_time, format_game_dates
+from .api_service import (
+    get_all_leagues,
+    get_teams_by_league,
+    get_team_info,
+    get_team_fixtures,
+    get_standings,
+    get_fixtures
+)
+from .helper import format_game_dates, send_email
 
 main = Blueprint('main', __name__)
+
 @main.route('/', methods=['GET', 'POST'])
 def home():
-    leagues = [
-        {"code": "PL", "name": "Premier League"},
-        {"code": "BL1", "name": "Bundesliga"},
-        {"code": "FL1", "name": "Ligue 1"},
-        {"code": "PD", "name": "La Liga"},
-        {"code": "SA", "name": "Serie A"}
-    ]
-
+    leagues = get_all_leagues()
     selected_league = request.form.get('league')
     teams = get_teams_by_league(selected_league) if selected_league else []
-
     return render_template('home.html', leagues=leagues, teams=teams, selected_league=selected_league)
 
 @main.route('/about')
@@ -46,20 +42,18 @@ def team():
     upcoming_games = get_team_fixtures(
         team_id, date_from=today.strftime('%Y-%m-%d'), date_to=next_month.strftime('%Y-%m-%d')
     )
-
-    def format_game_dates(games):
-        for game in games.get("matches", []):
-            game["formattedDate"] = convert_to_local_time(game["utcDate"])
-        return games.get("matches", [])
-
     upcoming_games = format_game_dates(upcoming_games)
 
     standings = get_standings(league_code)
 
+    standings_table = []
+    if standings and "standings" in standings and len(standings["standings"]) > 0:
+        standings_table = standings["standings"][0].get("table", [])
+
     return render_template(
         'team.html',
         team=team_info,
-        standings=standings.get("standings", [])[0].get("table", []),
+        standings=standings_table,
         upcoming_games=upcoming_games,
         selected_team_id=team_id
     )
@@ -72,19 +66,13 @@ def fixtures():
     date_from = today.strftime('%Y-%m-%d')
     date_to = next_week.strftime('%Y-%m-%d')
 
-    leagues = [
-        {"code": "PL", "name": "Premier League"},
-        {"code": "BL1", "name": "Bundesliga"},
-        {"code": "FL1", "name": "Ligue 1"},
-        {"code": "PD", "name": "La Liga"},
-        {"code": "SA", "name": "Serie A"}
-    ]
+    leagues = get_all_leagues()
 
     fixtures_by_league = {}
     for league in leagues:
-        fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
-        if fixtures:
-            fixtures_by_league[league["name"]] = format_game_dates(fixtures)
+        league_fixtures = get_fixtures(league["code"], date_from=date_from, date_to=date_to)
+        if league_fixtures:
+            fixtures_by_league[league["name"]] = format_game_dates(league_fixtures)
 
     return render_template('fixtures.html', fixtures_by_league=fixtures_by_league)
 
@@ -106,18 +94,17 @@ def email_report():
         if not league_code or not team_name or not email:
             flash("Please provide all required information.", "danger")
             return redirect(url_for('main.email_report'))
-
+        
         # Fetch team data
         team_info = get_team_info(team_name, league_code)
         if not team_info:
             flash(f"Team {team_name} not found in {league_code}!", "danger")
             return redirect(url_for('main.email_report'))
-
+        
         # Fetch additional data for the report
         team_id = team_info["id"]
         today = datetime.now()
         next_month = today + timedelta(days=30)
-
         upcoming_games = get_team_fixtures(
             team_id, date_from=today.strftime('%Y-%m-%d'), date_to=next_month.strftime('%Y-%m-%d')
         )
@@ -150,9 +137,8 @@ def email_report():
             flash(f"Email sent successfully to {email}!", "success")
         else:
             flash("Failed to send email. Please try again later.", "danger")
-
         return redirect(url_for('main.home'))
-
+    
     # Fetch all teams for all leagues
     leagues = get_all_leagues()
     all_teams = []
