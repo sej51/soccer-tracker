@@ -1,11 +1,7 @@
-import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
-
-API_BASE_URL = "https://api.football-data.org/v4"
-API_TOKEN = os.getenv("API_TOKEN")
+from .config import API_BASE_URL, API_TOKEN
 
 def fetch_data_from_api(url, params=None):
     """

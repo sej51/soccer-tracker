@@ -2,10 +2,11 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-import os
+
+from .config import DEFAULT_TIMEZONE, SENDGRID_API_KEY, DEFAULT_EMAIL
 
 # We used ChatGPT for this since we could not figure out time zone localization with datetime
-def convert_to_local_time(utc_time, timezone="America/New_York"):
+def convert_to_local_time(utc_time, timezone=DEFAULT_TIMEZONE):
     """
     Convert a UTC time string to a local timezone.
     :param utc_time: UTC time string in ISO 8601 format (e.g., "2024-12-12T18:30:00Z")
@@ -30,10 +31,9 @@ def send_email(to_email, subject, content):
     """
     Send an email using SendGrid.
     """
-    SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
     try:
         message = Mail(
-            from_email="sjolly03@gmail.com",
+            from_email=DEFAULT_EMAIL,
             to_emails=to_email,
             subject=subject,
             html_content=content
