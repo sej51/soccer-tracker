@@ -2,6 +2,10 @@
 
 *Please keep in mind for testing we are using a free API and are only allowed a few requests per minute. The API takes a minute to reload.
 
+## URL Link to Access
+
+https://soccer-tracker.onrender.com
+
 ## Setup
 
 Create a virtual environment (first time only):
